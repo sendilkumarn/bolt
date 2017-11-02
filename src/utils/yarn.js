@@ -26,7 +26,7 @@ export async function add(
 
   dependencies.forEach(dep => {
     if (dep.version) {
-      spawnArgs.push(`${dep.name}@${dep.version}`);
+      spawnArgs.push(`"${dep.name}@${dep.version}"`);
     } else {
       spawnArgs.push(dep.name);
     }
@@ -36,6 +36,25 @@ export async function add(
     const flag = depTypeToFlag(type);
     if (flag) spawnArgs.push(flag);
   }
+
+  await processes.spawn('yarn', spawnArgs, {
+    cwd: pkg.dir,
+    pkg: pkg,
+    tty: true
+  });
+}
+
+export async function upgrade(pkg: Package, dependencies: Array<Dependency>) {
+  const spawnArgs = ['upgrade'];
+  if (!dependencies.length) return;
+
+  dependencies.forEach(dep => {
+    if (dep.version) {
+      spawnArgs.push(`"${dep.name}@${dep.version}"`);
+    } else {
+      spawnArgs.push(dep.name);
+    }
+  });
 
   await processes.spawn('yarn', spawnArgs, {
     cwd: pkg.dir,

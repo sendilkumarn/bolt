@@ -51,7 +51,7 @@ describe('utils/yarn', () => {
 
     it('should be able to add dependency with versions', async () => {
       await yarn.add(project.pkg, [{ name: 'chalk', version: '^1.0.0' }]);
-      assertSpawnCalls(['add', 'chalk@^1.0.0'], cwd);
+      assertSpawnCalls(['add', '"chalk@^1.0.0"'], cwd);
     });
 
     it('should be able to add multiple dependencies', async () => {

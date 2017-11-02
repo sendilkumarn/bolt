@@ -30,7 +30,7 @@ export default async function updatePackageVersions(
         await pkg.setDependencyVersionRange(
           depName,
           depType,
-          '^' + versions[depName]
+          '^' + versions[depName] // TODO: We should remove this, which is a breaking change
         );
       }
       updatedPackages.add(pkg.filePath);

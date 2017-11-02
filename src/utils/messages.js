@@ -275,6 +275,12 @@ export function cannotInstallWorkspaceInProject(pkgName: string): Message {
   return `Cannot install workspace "${pkgName}" as a dependency of a project`;
 }
 
+export function cannotUpgradeWorkspaceDependencyInProject(
+  pkgName: string
+): Message {
+  return `Cannot upgrade workspace "${pkgName}" as a dependency of a project`;
+}
+
 export function errorParsingJSON(filePath: string): Message {
   return `Error parsing JSON in file:\n${filePath}`;
 }
@@ -282,8 +288,8 @@ export function errorParsingJSON(filePath: string): Message {
 export function cannotInitConfigMissingPkgJSON(filePath: string): Message {
   const basePath = filePath.replace(/.package\.json$/, '');
   return `This folder does not contain a package.json:\n${basePath}
-
-Sometimes this is caused by incomplete packages or switching branches.
-
-Try removing the directory or fixing the package and run bolt again.`;
+  
+  Sometimes this is caused by incomplete packages or switching branches.
+  
+  Try removing the directory or fixing the package and run bolt again.`;
 }
