@@ -4,6 +4,7 @@ module.exports = {
   ...require('./bin'),
   ...require('./build'),
   ...require('./cache'),
+  ...require('./changed'),
   ...require('./check'),
   ...require('./clean'),
   ...require('./config'),

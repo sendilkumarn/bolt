@@ -317,3 +317,15 @@ Sometimes this is caused by incomplete packages or switching branches.
 
 Try removing the directory or fixing the package and run bolt again.`;
 }
+
+export function gitFetching(remote: string): Message {
+  return `Fetching from ${remote}`;
+}
+
+export function gitGettingMasterCommit(remote: string): Message {
+  return `getting master commit for ${remote}`;
+}
+
+export function gitGettingDiff(remote: string): Message {
+  return `getting diff master commit for ${remote}`;
+}

@@ -16,6 +16,7 @@ const commandMap = {
   CACHE_CLEAN: { clean: true },
   CACHE_DIR: { dir: true },
   CACHE_LIST: { list: true, ls: true },
+  CHANGED: { changed: true },
   CHECK: { check: true },
   CONFIG: { config: true },
   CONFIG_DELETE: { delete: true },
@@ -105,6 +106,8 @@ function runCommandFromCli(args: options.Args, flags: options.Flags) {
     return commands.bin(commands.toBinOptions(commandArgs, flags));
   } else if (commandMap.CACHE[command]) {
     return commands.build(commands.toBuildOptions(commandArgs, flags));
+  } else if (commandMap.CHANGED[command]) {
+    return commands.changed(commands.toChangedOptions(commandArgs, flags));
   } else if (commandMap.CACHE_CLEAN[command]) {
     if (commandMap.CACHE_DIR[command]) {
       return commands.cacheClean(
