@@ -33,7 +33,7 @@ export class ChildProcessError extends Error {
   }
 }
 
-type SpawnOptions = {
+export type SpawnOptions = {
   cwd?: string,
   pkg?: Package,
   silent?: boolean,
@@ -45,7 +45,7 @@ export function spawn(
   cmd: string,
   args: Array<string>,
   opts: SpawnOptions = {}
-) {
+): Promise<{ code: number, stdout: string, stderr: string }> {
   return limit(
     () =>
       new Promise((resolve, reject) => {
