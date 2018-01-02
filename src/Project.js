@@ -13,6 +13,7 @@ import { BoltError } from './utils/errors';
 import * as globs from './utils/globs';
 import taskGraphRunner from 'task-graph-runner';
 import minimatch from 'minimatch';
+import Repository from './Repository';
 
 export type Task = (workspace: Workspace) => Promise<mixed>;
 
@@ -25,8 +26,9 @@ export default class Project {
 
   static async init(cwd: string) {
     let filePath = await Config.getProjectConfig(cwd);
-    if (!filePath)
+    if (!filePath) {
       throw new BoltError(`Unable to find root of project in ${cwd}`);
+    }
     let pkg = await Package.init(filePath);
     return new Project(pkg);
   }

@@ -16,9 +16,9 @@ import * as os from 'os';
 const gitCommandLimit = pLimit(1);
 
 function git(args: Array<string>, opts: processes.SpawnOptions) {
-  return gitCommandLimit(() =>
-    processes.spawn('git', args, { silent: true, ...opts })
-  );
+  return gitCommandLimit(() => {
+    return processes.spawn('git', args, { silent: true, ...opts });
+  });
 }
 
 function toGitPath(cwd: string, filePath: string) {
@@ -29,17 +29,25 @@ function isGitFatalError(err) {
   return err instanceof processes.ChildProcessError && err.code === 128;
 }
 
-export async function isInitialized(opts: { cwd: string }) {
-  let res = false;
+export async function getRootDirectory(opts: { cwd: string }) {
+  let dir = null;
   try {
-    await git(['rev-parse'], { cwd: opts.cwd });
-    res = true;
+    let res = await git(['rev-parse', '--show-toplevel'], {
+      cwd: opts.cwd
+    });
+
+    let { stdout } = res;
+    dir = stdout.trim();
   } catch (err) {
     if (!isGitFatalError(err)) {
       throw err;
     }
   }
-  return res;
+  return dir;
+}
+
+export async function initRepository(opts: { cwd: string }) {
+  await git(['init'], { cwd: opts.cwd });
 }
 
 export async function addFiles(
@@ -48,6 +56,10 @@ export async function addFiles(
 ) {
   let gitPaths = filePaths.map(filePath => toGitPath(opts.cwd, filePath));
   await git(['add', ...gitPaths], { cwd: opts.cwd });
+}
+
+export async function addAll(opts: { cwd: string }) {
+  await git(['add', '-A'], { cwd: opts.cwd });
 }
 
 export async function commit(message: string, opts: { cwd: string }) {
@@ -68,11 +80,6 @@ export async function addTag(tagName: string, opts: { cwd: string }) {
 
 export async function removeTag(tagName: string, opts: { cwd: string }) {
   await git(['tag', '-d', tagName], { cwd: opts.cwd });
-}
-
-export async function hasTags(opts: { cwd: string }) {
-  let { stdout } = await git(['tag'], { cwd: opts.cwd });
-  return !!stdout.trim();
 }
 
 export async function getCommitsToFile(
@@ -137,5 +144,12 @@ export async function getDiffForPathSinceCommit(
       cwd: opts.cwd
     }
   );
+  return stdout.trim();
+}
+
+export async function status(opts: { cwd: string }) {
+  let { stdout } = await git(['status', '--porcelain'], {
+    cwd: opts.cwd
+  });
   return stdout.trim();
 }
