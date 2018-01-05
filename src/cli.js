@@ -32,7 +32,7 @@ const commandMap = {
   GLOBAL_BIN: { bin: true },
   GLOBAL_LIST: { list: true, ls: true },
   GLOBAL_REMOVE: { remove: true, rm: true },
-  GLOBAL_UPGRADE: { upgrade: true },
+  GLOBAL_UPGRADE: { upgrade: true, up: true },
   HELP: { help: true, h: true, man: true },
   IMPORT: { import: true },
   INFO: { info: true },
@@ -58,7 +58,7 @@ const commandMap = {
   PROJECT_EXEC: { exec: true },
   PROJECT_REMOVE: { remove: true, rm: true },
   PROJECT_RUN: { run: true },
-  PROJECT_UPGRADE: { upgrade: true },
+  PROJECT_UPGRADE: { upgrade: true, up: true },
   PUBLISH: { publish: true },
   PUBLISH_LOCK: { 'publish-lock': true },
   PUBLISH_UNLOCK: { 'publish-unlock': true },
@@ -76,7 +76,7 @@ const commandMap = {
   TEAM_REMOVE: { remove: true, rm: true },
   TEST: { test: true, t: true },
   UNLINK: { unlink: true },
-  UPGRADE: { upgrade: true },
+  UPGRADE: { upgrade: true, up: true },
   UPGRADE_INTERACTIVE: { 'upgrade-interactive': true },
   VERSION: { version: true },
   VERSIONS: { versions: true },
@@ -84,15 +84,17 @@ const commandMap = {
   WORKSPACE: { workspace: true, w: true },
   WORKSPACE_ADD: { add: true },
   WORKSPACE_EXEC: { exec: true },
+  WORKSPACE_LINK: { link: true },
   WORKSPACE_REMOVE: { remove: true, rm: true },
   WORKSPACE_RUN: { run: true },
-  WORKSPACE_UPGRADE: { upgrade: true },
+  WORKSPACE_UNLINK: { unlink: true },
+  WORKSPACE_UPGRADE: { upgrade: true, up: true },
   WORKSPACES: { workspaces: true, ws: true },
   WORKSPACES_ADD: { add: true },
   WORKSPACES_EXEC: { exec: true },
   WORKSPACES_REMOVE: { remove: true, rm: true },
   WORKSPACES_RUN: { run: true },
-  WORKSPACES_UPGRADE: { upgrade: true }
+  WORKSPACES_UPGRADE: { upgrade: true, up: true }
 };
 
 function runCommandFromCli(args: options.Args, flags: options.Flags) {
@@ -104,18 +106,16 @@ function runCommandFromCli(args: options.Args, flags: options.Flags) {
   } else if (commandMap.BIN[command]) {
     return commands.bin(commands.toBinOptions(commandArgs, flags));
   } else if (commandMap.CACHE[command]) {
-    return commands.build(commands.toBuildOptions(commandArgs, flags));
-  } else if (commandMap.CACHE_CLEAN[command]) {
-    if (commandMap.CACHE_DIR[command]) {
+    if (commandMap.CACHE_CLEAN[subCommand]) {
       return commands.cacheClean(
         commands.toCacheCleanOptions(subCommandArgs, flags)
       );
-    } else if (commandMap.CACHE_DIR[command]) {
+    } else if (commandMap.CACHE_DIR[subCommand]) {
       return commands.cacheDir(
         commands.toCacheDirOptions(subCommandArgs, flags)
       );
     } else if (
-      commandMap.CACHE_LIST[command] ||
+      commandMap.CACHE_LIST[subCommand] ||
       typeof subCommand === 'undefined'
     ) {
       return commands.cacheList(
@@ -339,16 +339,21 @@ function runCommandFromCli(args: options.Args, flags: options.Flags) {
       return commands.workspaceExec(
         commands.toWorkspaceExecOptions(workspaceArgs, flags)
       );
+    } else if (commandMap.WORKSPACE_LINK[workspaceCommand]) {
+      return commands.workspacelink(
+        commands.toWorkspacelinkOptions(workspaceArgs, flags)
+      );
     } else if (commandMap.WORKSPACE_REMOVE[workspaceCommand]) {
       return commands.workspaceRemove(
         commands.toWorkspaceRemoveOptions(workspaceArgs, flags)
       );
-    } else if (
-      commandMap.WORKSPACE_RUN[workspaceCommand] ||
-      typeof subCommand !== 'undefined'
-    ) {
+    } else if (commandMap.WORKSPACE_RUN[workspaceCommand]) {
       return commands.workspaceRun(
         commands.toWorkspaceRunOptions(workspaceArgs, flags)
+      );
+    } else if (commandMap.WORKSPACE_UNLINK[workspaceCommand]) {
+      return commands.workspaceUnlink(
+        commands.toWorkspaceUnlinkOptions(workspaceArgs, flags)
       );
     } else if (commandMap.WORKSPACE_UPGRADE[workspaceCommand]) {
       return commands.workspaceUpgrade(

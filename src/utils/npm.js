@@ -24,7 +24,8 @@ export async function infoAllow404(pkgName: string) {
     const pkgInfo = await info(pkgName);
     return { published: true, pkgInfo };
   } catch (error) {
-    if (error.stderr && error.stderr.startsWith('npm ERR! code E404')) {
+    const output = JSON.parse(error.stdout);
+    if (output.error && output.error.code === 'E404') {
       logger.warn(messages.npmInfo404(pkgName));
       return { published: false, pkgInfo: {} };
     }
@@ -38,10 +39,17 @@ export function publish(
 ) {
   return npmRequestLimit(async () => {
     logger.info(messages.npmPublish(pkgName));
-    let publishFlags = opts.access ? ['--access', opts.access] : [];
-    return await processes.spawn('npm', ['publish', ...publishFlags], {
-      cwd: opts.cwd
-    });
+    const publishFlags = opts.access ? ['--access', opts.access] : [];
+
+    try {
+      await processes.spawn('npm', ['publish', ...publishFlags], {
+        cwd: opts.cwd
+      });
+      return { published: true };
+    } catch (error) {
+      // Publish failed
+      return { published: false };
+    }
   });
 }
 

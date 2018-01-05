@@ -74,7 +74,9 @@ export function invalidBoltVersion(
   actualVersion: string,
   expectedVersion: string
 ): Message {
-  return `Project expects a bolt version of ${expectedVersion} but found ${actualVersion}
+  return `Project expects a bolt version of ${goodVer(
+    expectedVersion
+  )} but found ${badVer(actualVersion)}
 run \`yarn global add "bolt@${expectedVersion}"\` to resolve`;
 }
 
@@ -140,6 +142,13 @@ export function cannotRemoveDependencyDependendOnByWorkspaces(
   )} that is depended on by some workspaces:\n${workspaces
     .map(workspace => ` - ${normalPkg(workspace.pkg.config.getName())}`)
     .join('\n')}`;
+}
+export function externalDepsPassedToUpdatePackageVersions(
+  externalDeps: Array<string>
+): Message {
+  return `Attempted to pass external dependencies to updatePackageVersions:\n${externalDeps.join(
+    ', '
+  )}`;
 }
 
 export function runWorkspacesRemoveDependency(depName: string): Message {
@@ -263,6 +272,14 @@ export function noUnpublishedPackagesToPublish(): Message {
   return 'No unpublished packages to publish';
 }
 
+export function notPublishingPackage(
+  pkgLocalVersion: string,
+  pkgPublishedVersion: string,
+  pkgName: string
+): Message {
+  return `${pkgName} is not being published because version ${pkgPublishedVersion} is already published on npm and we are trying to publish version ${pkgLocalVersion}`;
+}
+
 export function couldNotBeNormalized(): Message {
   return 'The following packages could not be normalized:';
 }
@@ -285,6 +302,19 @@ export function errorParsingJSON(filePath: string): Message {
   return `Error parsing JSON in file:\n${filePath}`;
 }
 
+export function invalidBoltWorkspacesFromUpdate(
+  name: string,
+  depName: string,
+  depRange: string,
+  newVersion: string
+): Message {
+  return `${name} has a dependency on ${depName} at ${depRange}, however the new version of ${newVersion} leaves this range. You will need to make a new changeset that includes an update to ${name}`;
+}
+
+export function unableToInstall(): Message {
+  return `Project is invalid, bolt is unable to install`;
+}
+
 export function cannotInitConfigMissingPkgJSON(filePath: string): Message {
   const basePath = filePath.replace(/.package\.json$/, '');
   return `This folder does not contain a package.json:\n${basePath}
@@ -292,4 +322,16 @@ export function cannotInitConfigMissingPkgJSON(filePath: string): Message {
   Sometimes this is caused by incomplete packages or switching branches.
   
   Try removing the directory or fixing the package and run bolt again.`;
+}
+
+export function unsafeCycles(): Message {
+  return 'Task ran with unsafe dependency cycles in workspaces.';
+}
+
+export function linkInternalPackage(internalPackageName: string): Message {
+  return `Cannot link project package (${internalPackageName}), as these are already linked`;
+}
+
+export function unlinkInternalPackage(internalPackageName: string): Message {
+  return `Cannot unlink project package (${internalPackageName})`;
 }

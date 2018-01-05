@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": "simple-project-with-bolt-version-check",
+  "version": "1.0.0",
+  "bolt": {
+    "version": "0.14.x",
+    "workspaces": [
+      "packages/*"
+    ]
+  }
+}

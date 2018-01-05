@@ -37,11 +37,10 @@ describe('install', () => {
     let cwd = await getFixturePath(__dirname, 'simple-package');
     await install(toInstallOptions([], { cwd }));
     expect(unsafeProcesses.spawn).toHaveBeenCalledTimes(1);
-    expect(unsafeProcesses.spawn).toHaveBeenCalledWith(
-      'yarn',
-      ['install', '--non-interactive', '-s'],
-      { cwd }
-    );
+    expect(unsafeProcesses.spawn).toHaveBeenCalledWith('yarn', ['install'], {
+      cwd,
+      tty: true
+    });
   });
 
   test('should still run yarn install at the root when called from ws', async () => {
@@ -49,10 +48,24 @@ describe('install', () => {
     let cwd = path.join(path.join(rootDir, 'packages', 'foo'));
     await install(toInstallOptions([], { cwd }));
     expect(unsafeProcesses.spawn).toHaveBeenCalledTimes(1);
+    expect(unsafeProcesses.spawn).toHaveBeenCalledWith('yarn', ['install'], {
+      cwd: rootDir,
+      tty: true
+    });
+  });
+
+  test('should pass the --pure-lockfile flag correctly', async () => {
+    let rootDir = await getFixturePath(__dirname, 'simple-project');
+    let cwd = path.join(path.join(rootDir, 'packages', 'foo'));
+    await install(toInstallOptions([], { cwd, pureLockfile: true }));
+    expect(unsafeProcesses.spawn).toHaveBeenCalledTimes(1);
     expect(unsafeProcesses.spawn).toHaveBeenCalledWith(
       'yarn',
-      ['install', '--non-interactive', '-s'],
-      { cwd: rootDir }
+      ['install', '--pure-lockfile'],
+      {
+        cwd: rootDir,
+        tty: true
+      }
     );
   });
 
@@ -105,16 +118,15 @@ describe('install', () => {
     }
   });
 
-  test('should exit early if project is not valid', async () => {
+  test('should throw if project is not valid', async () => {
     const cwd = await copyFixtureIntoTempDir(
       __dirname,
       'invalid-project-root-dependency-on-ws'
     );
     const project = await Project.init(cwd);
 
-    await install(toInstallOptions([], { cwd }));
-
-    // check that yarn install didnt get called
-    expect(unsafeProcesses.spawn).not.toHaveBeenCalled();
+    await expect(install(toInstallOptions([], { cwd }))).rejects.toBeInstanceOf(
+      Error
+    );
   });
 });

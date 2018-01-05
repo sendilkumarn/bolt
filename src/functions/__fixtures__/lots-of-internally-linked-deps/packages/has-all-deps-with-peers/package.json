@@ -1,0 +1,10 @@
+{
+  "name": "has-all-deps-with-peers",
+  "version": "1.1.1",
+  "peerDependencies": {
+    "caret-dep": "^1.1.1"
+  },
+  "devDependencies": {
+    "caret-dep": "^1.1.1"
+  }
+}

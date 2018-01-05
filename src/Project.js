@@ -1,6 +1,7 @@
 // @flow
 import * as path from 'path';
 import includes from 'array-includes';
+import semver from 'semver';
 import Package from './Package';
 import Workspace from './Workspace';
 import Config from './Config';
@@ -10,6 +11,8 @@ import * as logger from './utils/logger';
 import * as messages from './utils/messages';
 import { BoltError } from './utils/errors';
 import * as globs from './utils/globs';
+import taskGraphRunner from 'task-graph-runner';
+import minimatch from 'minimatch';
 
 export type Task = (workspace: Workspace) => Promise<mixed>;
 
@@ -77,10 +80,11 @@ export default class Project {
         let match = packagesByName[depName];
         if (!match) continue;
 
-        let actual = depVersion.replace(/^\^/, '');
+        let actual = depVersion;
         let expected = match.config.getVersion();
 
-        if (actual !== expected) {
+        // Workspace dependencies only need to semver satisfy, not '==='
+        if (!semver.satisfies(expected, depVersion)) {
           valid = false;
           logger.error(
             messages.packageMustDependOnCurrentVersion(
@@ -137,16 +141,31 @@ export default class Project {
     return { valid, graph };
   }
 
-  // TODO: Properly sort packages using a topological sort, resolving cycles
-  // with groups specified in `package.json#pworkspaces`
-  static async runWorkspaceTasks(workspaces: Array<Workspace>, task: Task) {
-    let promises = [];
+  async runWorkspaceTasks(workspaces: Array<Workspace>, task: Task) {
+    let { graph: dependentsGraph, valid } = await this.getDependencyGraph(
+      workspaces
+    );
 
-    for (let workspace of workspaces) {
-      promises.push(task(workspace));
+    let graph = new Map();
+
+    for (let [pkgName, pkgInfo] of dependentsGraph) {
+      graph.set(pkgName, pkgInfo.dependencies);
     }
 
-    await Promise.all(promises);
+    let { safe } = await taskGraphRunner({
+      graph,
+      force: true,
+      task: async workspaceName => {
+        let workspace = this.getWorkspaceByName(workspaces, workspaceName);
+        if (workspace) {
+          return task(workspace);
+        }
+      }
+    });
+
+    if (!safe) {
+      logger.error(messages.unsafeCycles());
+    }
   }
 
   getWorkspaceByName(workspaces: Array<Workspace>, workspaceName: string) {
