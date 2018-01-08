@@ -37,6 +37,10 @@ export function lstat(filePath: string) {
   return promisify(cb => fs.lstat(filePath, cb));
 }
 
+export function realpath(filePath: string) {
+  return promisify(cb => fs.realpath(filePath, cb));
+}
+
 function unlink(filePath: string) {
   return promisify(cb => fs.unlink(filePath, cb));
 }

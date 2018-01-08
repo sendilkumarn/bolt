@@ -15,6 +15,8 @@ import * as os from 'os';
 // for a lot of commands and will error.
 const gitCommandLimit = pLimit(1);
 
+opaque type CommitHash = string;
+
 function git(args: Array<string>, opts: processes.SpawnOptions) {
   return gitCommandLimit(() => {
     return processes.spawn('git', args, { silent: true, ...opts });
@@ -85,11 +87,11 @@ export async function removeTag(tagName: string, opts: { cwd: string }) {
 export async function getCommitsToFile(
   filePath: string,
   opts: { cwd: string }
-) {
+): Promise<Array<CommitHash>> {
   let gitPath = toGitPath(opts.cwd, filePath);
   try {
     let { stdout } = await git(
-      ['log', '--pretty=format:%H', '--follow', filePath],
+      ['log', '--pretty=format:%H', '--follow', gitPath],
       {
         cwd: opts.cwd
       }
@@ -104,9 +106,9 @@ export async function getCommitsToFile(
 }
 
 export async function getCommitParent(
-  commitHash: string,
+  commitHash: CommitHash,
   opts: { cwd: string }
-) {
+): Promise<CommitHash | null> {
   try {
     let { stdout } = await git(['rev-parse', `${commitHash}^`], {
       cwd: opts.cwd
@@ -122,7 +124,7 @@ export async function getCommitParent(
 
 export async function showFileAtCommit(
   filePath: string,
-  commitHash: string,
+  commitHash: CommitHash,
   opts: { cwd: string }
 ) {
   let gitPath = toGitPath(opts.cwd, filePath);
@@ -132,14 +134,17 @@ export async function showFileAtCommit(
   return stdout;
 }
 
+export const MAGIC_EMPTY_STATE_HASH: CommitHash =
+  '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+
 export async function getDiffForPathSinceCommit(
   filePath: string,
-  commitHash: string,
+  commitHash: CommitHash,
   opts: { cwd: string }
 ) {
   let gitPath = toGitPath(opts.cwd, filePath);
   let { stdout } = await git(
-    ['diff', '--name-only', commitHash, '--', filePath],
+    ['diff', commitHash, '--color=always', '--', filePath],
     {
       cwd: opts.cwd
     }

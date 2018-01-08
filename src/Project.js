@@ -25,7 +25,8 @@ export default class Project {
   }
 
   static async init(cwd: string) {
-    let filePath = await Config.getProjectConfig(cwd);
+    let realPath = await fs.realpath(cwd);
+    let filePath = await Config.getProjectConfig(realPath);
     if (!filePath) {
       throw new BoltError(`Unable to find root of project in ${cwd}`);
     }

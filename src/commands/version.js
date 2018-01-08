@@ -4,6 +4,8 @@ import Repository from '../Repository';
 import * as options from '../utils/options';
 import * as changes from '../utils/changes';
 import * as git from '../utils/git';
+import * as prompt from '../utils/prompt';
+import * as semver from 'semver';
 import { BoltError } from '../utils/errors';
 
 export type VersionOptions = {
@@ -42,11 +44,72 @@ export async function version(opts: VersionOptions) {
     workspaces
   );
 
-  let diffs = [];
+  let diffs = new Map();
+  let changedWorkspaces = [];
 
   for (let workspace of workspaces) {
-    // await git.getDiffForPathSinceCommit(workspace.pkg.dir);
+    let versionCommit = versionCommits.get(workspace);
+
+    if (!versionCommit) {
+      versionCommit = git.MAGIC_EMPTY_STATE_HASH;
+    }
+
+    let diff = await git.getDiffForPathSinceCommit(
+      workspace.pkg.dir,
+      versionCommit,
+      { cwd: repo.dir }
+    );
+
+    diffs.set(workspace, diff);
+    if (diff.length) {
+      changedWorkspaces.push(workspace);
+    }
   }
 
-  console.log(versionCommits);
+  let newVersions = new Map();
+
+  for (let changedWorkspace of changedWorkspaces) {
+    let name = changedWorkspace.pkg.config.getName();
+    let currentVersion = changedWorkspace.pkg.config.getVersion();
+    let nextVersion = null;
+
+    while (!nextVersion) {
+      let choice =
+        'diff' ||
+        (await prompt.list(
+          `Select a new version for ${name} (currently ${currentVersion})`,
+          [
+            {
+              name: `Patch (${semver.inc(currentVersion, 'patch')})`,
+              value: 'patch'
+            },
+            {
+              name: `Minor (${semver.inc(currentVersion, 'minor')})`,
+              value: 'minor'
+            },
+            {
+              name: `Major (${semver.inc(currentVersion, 'major')})`,
+              value: 'major'
+            },
+            prompt.separator(),
+            {
+              name: 'View Diff',
+              value: 'diff'
+            }
+          ]
+        ));
+
+      if (choice === 'diff') {
+        console.log(diffs.get(changedWorkspace));
+      }
+    }
+
+    console.log(semverType);
+
+    // console.log(changedWorkspace.pkg.config.getName());
+    // console.log(changedWorkspace.pkg.dir);
+    // console.log(diffs.get(changedWorkspace));
+  }
+
+  // console.log(diffs);
 }

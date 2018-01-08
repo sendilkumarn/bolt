@@ -7,8 +7,8 @@ async function getLastVersionCommitForWorkspace(
   repo: Repository,
   workspace: Workspace
 ) {
-  let filePath = workspace.pkg.config.filePath;
   let cwd = repo.dir;
+  let filePath = workspace.pkg.config.filePath;
   let commits = await git.getCommitsToFile(filePath, { cwd });
   let matchedCommit = null;
 
@@ -16,8 +16,8 @@ async function getLastVersionCommitForWorkspace(
     let parentCommit = await git.getCommitParent(commit, { cwd });
     if (!parentCommit) continue;
 
-    let before = await git.showFileAtCommit(parentCommit, filePath, { cwd });
-    let after = await git.showFileAtCommit(commit, filePath, { cwd });
+    let before = await git.showFileAtCommit(filePath, parentCommit, { cwd });
+    let after = await git.showFileAtCommit(filePath, commit, { cwd });
 
     let jsonBefore = JSON.parse(before);
     let jsonAfter = JSON.parse(after);
