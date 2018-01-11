@@ -5,7 +5,8 @@ import * as options from '../utils/options';
 import * as changes from '../utils/changes';
 import * as git from '../utils/git';
 import * as prompt from '../utils/prompt';
-import * as semver from 'semver';
+import * as versions from '../utils/versions';
+import * as constants from '../constants';
 import { BoltError } from '../utils/errors';
 
 export type VersionOptions = {
@@ -70,41 +71,66 @@ export async function version(opts: VersionOptions) {
 
   for (let changedWorkspace of changedWorkspaces) {
     let name = changedWorkspace.pkg.config.getName();
-    let currentVersion = changedWorkspace.pkg.config.getVersion();
+    let currentVersionStr = changedWorkspace.pkg.config.getVersion();
+    let currentVersion = versions.toVersion(currentVersionStr);
     let nextVersion = null;
 
     while (!nextVersion) {
-      let choice =
-        'diff' ||
-        (await prompt.list(
-          `Select a new version for ${name} (currently ${currentVersion})`,
-          [
-            {
-              name: `Patch (${semver.inc(currentVersion, 'patch')})`,
-              value: 'patch'
-            },
-            {
-              name: `Minor (${semver.inc(currentVersion, 'minor')})`,
-              value: 'minor'
-            },
-            {
-              name: `Major (${semver.inc(currentVersion, 'major')})`,
-              value: 'major'
-            },
-            prompt.separator(),
-            {
-              name: 'View Diff',
-              value: 'diff'
-            }
-          ]
-        ));
+      let choice = await prompt.list(
+        `Select a new version for ${name} (currently ${currentVersionStr})`,
+        [
+          versions.getPrereleaseType(currentVersion) && {
+            name: `Prerelease (${versions.increment(
+              currentVersion,
+              'prerelease'
+            )})`
+          },
+          {
+            name: `Patch (${versions.increment(currentVersion, 'patch')})`,
+            value: 'patch'
+          },
+          {
+            name: `Minor (${versions.increment(currentVersion, 'minor')})`,
+            value: 'minor'
+          },
+          {
+            name: `Major (${versions.increment(currentVersion, 'major')})`,
+            value: 'major'
+          },
+          {
+            name: `Prepatch (${versions.increment(
+              currentVersion,
+              'prepatch'
+            )})`,
+            value: 'prepatch'
+          },
+          {
+            name: `Preminor (${versions.increment(
+              currentVersion,
+              'preminor'
+            )})`,
+            value: 'preminor'
+          },
+          {
+            name: `Premajor (${versions.increment(
+              currentVersion,
+              'premajor'
+            )})`,
+            value: 'premajor'
+          },
+          prompt.separator(),
+          {
+            name: 'diff',
+            value: 'diff'
+          }
+        ].filter(Boolean)
+      );
 
       if (choice === 'diff') {
         console.log(diffs.get(changedWorkspace));
+      } else {
       }
     }
-
-    console.log(semverType);
 
     // console.log(changedWorkspace.pkg.config.getName());
     // console.log(changedWorkspace.pkg.dir);
